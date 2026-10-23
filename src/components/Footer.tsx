@@ -53,17 +53,17 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-sm">
-                XZ
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 flex items-center justify-center font-black text-black text-sm shadow-md shadow-amber-500/20">
+                VIP
               </div>
-              <span className="font-black text-white text-lg">إكس زد ستور</span>
+              <span className="font-black text-white text-lg tracking-wide">Shad-Vip</span>
             </div>
             <p className="text-xs text-slate-400 leading-relaxed mb-4">
-              الوجهة الرقمية الأولى في الشرق الأوسط لشحن شدات الألعاب واشتراكات التطبيقات والبطاقات الإلكترونية بأسرع وقت وأعلى معايير الأمان.
+              المنصة المتكاملة الأولى لشحن الألعاب والاشتراكات الرقمية والذكاء الاصطناعي وخدمات الدفع الإلكتروني السريع بأعلى معايير الأمان.
             </p>
-            <div className="flex items-center gap-2 text-xs text-blue-400">
+            <div className="flex items-center gap-2 text-xs text-amber-400">
               <Lock className="w-3.5 h-3.5" />
-              <span>نظام دفع مشفر ومحمي بالكامل</span>
+              <span>نظام دفع مشفر ومحمي بالكامل - shad-vip.store</span>
             </div>
           </div>
 
@@ -156,9 +156,9 @@ export default function Footer() {
 
         {/* Bottom copyright */}
         <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} إكس زد ستور (X-Z Store)</div>
+          <div>جميع الحقوق محفوظة &copy; {new Date().getFullYear()} منصة Shad-Vip (shad-vip.store)</div>
           <div className="flex items-center gap-4">
-            <span>منصة تجارة إلكترونية سحابية فائقة الأمان</span>
+            <span>منصة رقمية سريعة وآمنة</span>
           </div>
         </div>
 

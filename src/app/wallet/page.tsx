@@ -17,16 +17,6 @@ export default async function WalletPage() {
     select: { id: true, name: true, email: true, walletBalance: true },
   });
 
-  const paymentMethods = await prisma.paymentMethod.findMany({
-    where: { isActive: true },
-  });
-
-  const depositRequests = await prisma.depositRequest.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-  });
-
   const transactions = await prisma.walletTransaction.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
@@ -34,15 +24,21 @@ export default async function WalletPage() {
   });
 
   const currencySetting = await prisma.storeSetting.findUnique({ where: { id: "currency" } });
-  const currency = currencySetting?.value || "ل.س";
+  const currency = currencySetting?.value || "$";
 
   return (
-    <div className="max-w-6xl mx-auto py-2">
+    <div className="max-w-xl mx-auto py-2">
       <WalletDepositClient
         currentUser={dbUser || user}
-        paymentMethods={paymentMethods}
-        depositRequests={depositRequests}
-        transactions={transactions}
+        transactions={transactions.map((t) => ({
+          id: t.id,
+          type: t.type,
+          amount: t.amount,
+          balanceBefore: t.balanceBefore,
+          balanceAfter: t.balanceAfter,
+          description: t.description,
+          createdAt: t.createdAt,
+        }))}
         currency={currency}
       />
     </div>

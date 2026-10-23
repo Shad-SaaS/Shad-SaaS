@@ -3,7 +3,7 @@
 import { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogIn, AlertCircle, Loader2, Lock, Mail } from "lucide-react";
+import { User, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,6 +12,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -42,92 +43,130 @@ function LoginForm() {
   };
 
   return (
-    <div className="max-w-md mx-auto my-12">
-      <div className="glass-panel p-8 rounded-3xl border border-white/10 shadow-2xl space-y-6">
-        
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mx-auto border border-blue-500/30">
-            <LogIn className="w-6 h-6" />
+    <div className="max-w-xs sm:max-w-sm mx-auto my-6 text-right">
+      
+      {/* Top Header Logo matching Screenshot 4 in Batch 1 */}
+      <div className="flex flex-col items-center text-center mb-8 space-y-2">
+        <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 p-0.5 shadow-xl flex items-center justify-center border-2 border-amber-300/40">
+          <div className="w-full h-full rounded-full bg-[#111622] flex items-center justify-center">
+            <span className="font-black text-amber-400 text-lg">VIP</span>
           </div>
-          <h1 className="text-2xl font-black text-white">تسجيل الدخول</h1>
-          <p className="text-xs text-slate-400">
-            أدخل بريدك الإلكتروني وكلمة المرور للوصول إلى حسابك ومحفظتك
-          </p>
+        </div>
+        <div className="text-xs font-black tracking-widest text-slate-400 uppercase font-mono">
+          Shad-Vip Store
+        </div>
+      </div>
+
+      {error && (
+        <div className="mb-4 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold text-center">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-3.5">
+        
+        {/* Email or Username */}
+        <div className="relative">
+          <input
+            type="text"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="البريد الالكتروني او اسم المستخدم"
+            className="w-full bg-[#141b27] border border-white/10 rounded-2xl px-4 py-3 pr-10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 text-right shadow-inner"
+          />
+          <User className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
         </div>
 
-        {error && (
-          <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">
-              البريد الإلكتروني:
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@example.com"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 focus:border-blue-500 focus:outline-none text-white text-sm"
-              />
-              <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-slate-300 mb-1.5">
-              كلمة المرور:
-            </label>
-            <div className="relative">
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 focus:border-blue-500 focus:outline-none text-white text-sm"
-              />
-              <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
-            </div>
-          </div>
-
+        {/* Password with Eye Toggle */}
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="كلمة المرور"
+            className="w-full bg-[#141b27] border border-white/10 rounded-2xl px-4 py-3 pr-10 pl-10 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 text-right shadow-inner"
+          />
+          <Lock className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5" />
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl glow-btn font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute left-3.5 top-3.5 text-slate-400 hover:text-white"
           >
-            {loading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <span>دخول إلى الحساب</span>
-            )}
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
-        </form>
+        </div>
 
-        <div className="text-center pt-4 border-t border-white/10 text-xs text-slate-400">
-          ليس لديك حساب بعد؟{" "}
-          <Link
-            href={`/register?redirect=${redirect}`}
-            className="text-blue-400 font-bold hover:underline"
-          >
-            إنشاء حساب جديد
+        {/* Login Button matching Screenshot 4 */}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-[#3b4454] hover:bg-[#4a5568] text-white font-black py-3 rounded-2xl text-xs sm:text-sm transition-all shadow-lg active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>تسجيل الدخول</span>}
+        </button>
+
+        {/* Forgot password */}
+        <div className="text-center pt-1">
+          <a href="#" className="text-xs text-slate-400 hover:text-white font-bold">
+            هل نسيت كلمة المرور ؟
+          </a>
+        </div>
+
+        {/* Divider */}
+        <div className="flex items-center gap-3 py-1">
+          <div className="flex-1 h-px bg-white/10" />
+          <span className="text-xs text-slate-500 font-bold">او</span>
+          <div className="flex-1 h-px bg-white/10" />
+        </div>
+
+        {/* Google Login Button matching Screenshot 4 */}
+        <button
+          type="button"
+          onClick={() => {
+            setEmail("customer@example.com");
+            setPassword("customerpassword123");
+          }}
+          className="w-full bg-white text-slate-900 font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-xs shadow-md hover:bg-slate-100 transition-colors"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+            />
+          </svg>
+          <span>تسجيل الدخول بواسطة Google</span>
+        </button>
+
+        {/* Footer Link */}
+        <div className="text-center pt-3 text-xs text-slate-400">
+          <span>ليس لديك حساب؟ </span>
+          <Link href="/register" className="font-bold text-white hover:underline">
+            إنشاء حساب
           </Link>
         </div>
 
-      </div>
+      </form>
     </div>
   );
 }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="text-center py-12 text-slate-400 text-xs">جارٍ التحميل...</div>}>
+    <Suspense fallback={<div className="text-center p-8 text-xs text-slate-400">جاري التحميل...</div>}>
       <LoginForm />
     </Suspense>
   );

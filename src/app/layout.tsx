@@ -7,9 +7,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "Shad-Store | متجر شاد ستور — منصة الخدمات والمنتجات الرقمية",
+  title: "Shad-Vip | متجر شاد في آي بي — منصة الخدمات والمنتجات الرقمية",
   description: "المنصة الأولى لشحن الألعاب والاشتراكات الرقمية والبطاقات عبر سيريتل كاش وشام كاش بأمان وسرعة فائقة.",
-  keywords: ["شحن ببجي", "تيليجرام بريميوم", "فري فاير", "سيريتل كاش", "شام كاش", "متجر رقمي", "Shad-Store"],
+  keywords: ["شحن ببجي", "تيليجرام بريميوم", "فري فاير", "سيريتل كاش", "شام كاش", "متجر رقمي", "Shad-Vip", "shad-vip.store"],
 };
 
 export default async function RootLayout({
@@ -19,8 +19,8 @@ export default async function RootLayout({
 }) {
   let user = null;
   let announcement = "⚡ شحن فوري للألعاب والاشتراكات 24/7 عبر سيريتل كاش وشام كاش!";
-  let currency = "ل.س";
-  let storeName = "Shad-Store | متجر شاد ستور";
+  let currency = "$";
+  let storeName = "Shad-Vip";
   let storeLogo = "";
 
   try {

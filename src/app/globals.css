@@ -5,13 +5,13 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: #020412;
-  --bg-card: #060922;
-  --bg-card-hover: #0b113b;
-  --brand-blue: #0061fe;
-  --brand-blue-hover: #1a73e8;
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --text-main: #ffffff;
+  --bg-primary: #0a0f18;
+  --bg-card: #121824;
+  --bg-card-hover: #182030;
+  --brand-gold: #f59e0b;
+  --brand-green: #10b981;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --text-main: #f8fafc;
   --text-muted: #94a3b8;
 }
 
@@ -30,60 +30,107 @@ body {
   color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(0, 97, 254, 0.12) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(0, 210, 255, 0.08) 0%, transparent 45%);
-  background-attachment: fixed;
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #020412;
+  background: #0a0f18;
 }
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #0061fe;
+  background: #334155;
 }
 
-/* Glassmorphism Classes */
+/* Tech Grid Background for dedicated order pages */
+.tech-grid-bg {
+  background-color: #080c14;
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Glass & Card Classes */
+.shad-card {
+  background: #121824;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 1rem;
+  transition: all 0.2s ease;
+}
+
+.shad-card:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: #151d2c;
+  transform: translateY(-2px);
+}
+
 .glass-panel {
-  background: rgba(6, 9, 34, 0.75);
+  background: rgba(18, 24, 36, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.glass-card {
-  background: linear-gradient(180deg, rgba(11, 17, 59, 0.5) 0%, rgba(6, 9, 34, 0.8) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.25s ease;
+.btn-slate {
+  background: #475569;
+  color: white;
+  font-weight: 700;
+  transition: all 0.2s ease;
 }
 
-.glass-card:hover {
-  border-color: rgba(0, 97, 254, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -10px rgba(0, 97, 254, 0.3);
+.btn-slate:hover {
+  background: #334155;
+}
+
+.btn-slate:active {
+  transform: scale(0.98);
 }
 
 .glow-btn {
-  background: linear-gradient(135deg, #0061fe 0%, #004ecc 100%);
+  background: #475569;
   color: white;
-  box-shadow: 0 4px 20px -2px rgba(0, 97, 254, 0.5);
+  font-weight: 700;
   transition: all 0.2s ease;
 }
 
 .glow-btn:hover {
-  box-shadow: 0 6px 25px 0 rgba(0, 97, 254, 0.7);
-  transform: translateY(-1px);
+  background: #334155;
 }
 
-.glow-btn:active {
-  transform: scale(0.98);
+/* Red Diagonal Ribbon for Unavailable Items */
+.ribbon-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.ribbon-unavailable {
+  position: absolute;
+  top: 14px;
+  right: -28px;
+  background: #ef4444;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 28px;
+  transform: rotate(45deg);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+  z-index: 10;
+}
+
+/* Marquee Animation for Ticker */
+@keyframes ticker {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-ticker {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ticker 25s linear infinite;
 }

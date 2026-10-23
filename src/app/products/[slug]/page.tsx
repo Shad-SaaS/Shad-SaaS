@@ -4,11 +4,10 @@ import { prisma } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import ProductOrderForm from "./ProductOrderForm";
 import {
-  Zap,
+  ChevronRight,
+  Heart,
   ShieldCheck,
   Clock,
-  ArrowRight,
-  HelpCircle,
   Sparkles,
 } from "lucide-react";
 
@@ -41,96 +40,88 @@ export default async function ProductDetailPage({
 
   const currentUser = await getCurrentUser();
   const currencySetting = await prisma.storeSetting.findUnique({ where: { id: "currency" } });
-  const currency = currencySetting?.value || "ل.س";
+  const currency = currencySetting?.value || "$";
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="min-h-screen py-4 px-3 sm:px-6 flex flex-col items-center">
       
-      {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-xs text-slate-400">
-        <Link href="/" className="hover:text-white transition-colors">
-          الرئيسية
+      {/* Top Bar with Back and Heart */}
+      <div className="w-full max-w-md flex items-center justify-between mb-4">
+        <Link
+          href={`/categories/${product.category.slug}`}
+          className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+          title="الرجوع للقسم"
+        >
+          <ChevronRight className="w-5 h-5" />
         </Link>
-        <span>/</span>
-        <Link href={`/categories/${product.category.slug}`} className="hover:text-white transition-colors">
-          {product.category.name}
-        </Link>
-        <span>/</span>
-        <span className="text-white font-bold">{product.name}</span>
-      </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Column: Product Information */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="glass-panel p-4 rounded-3xl overflow-hidden border border-white/10">
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900/60 relative mb-4">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-blue-400">
-                  {product.name}
-                </div>
-              )}
-              {product.executionTime && (
-                <div className="absolute top-3 right-3 bg-black/75 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 text-xs font-bold text-cyan-300 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>سرعة التسليم: {product.executionTime}</span>
-                </div>
-              )}
-            </div>
+        <button
+          type="button"
+          className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-white/10 transition-colors"
+          title="إضافة للمفضلة"
+        >
+          <Heart className="w-4 h-4" />
+        </button>
+      </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-white mb-2 leading-tight">
-              {product.name}
-            </h1>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              {product.shortDesc}
-            </p>
-          </div>
-
-          {/* Description & Terms */}
-          <div className="glass-panel p-5 rounded-3xl border border-white/10 space-y-4">
-            <h3 className="font-bold text-white text-sm flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-400" />
-              تفاصيل وشروط الخدمة:
-            </h3>
-            <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">
-              {product.description || "خدمة رسمية موثوقة ومباشرة لحسابك عبر البيانات المطلوبة."}
-            </p>
-
-            <div className="pt-3 border-t border-white/10 space-y-2 text-xs text-slate-400">
-              <div className="flex items-center gap-2 text-emerald-400">
-                <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-                <span>ضمان كامل وأمان الحساب 100%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 flex-shrink-0 text-cyan-400" />
-                <span>تنفيذ تلقائي وتحديث لحظي لحالة الطلب</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Order Form Component */}
-        <div className="lg:col-span-7">
-          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
-            <h2 className="text-lg font-black text-white mb-6 pb-3 border-b border-white/10 flex items-center justify-between">
-              <span>إتمام طلب الخدمة</span>
-              <span className="text-xs font-medium text-slate-400">دفع فوري من المحفظة</span>
-            </h2>
-
-            <ProductOrderForm
-              product={product}
-              currentUser={currentUser}
-              currency={currency}
+      {/* Main Centered Product Brand Header (as in Batch 15 screenshots) */}
+      <div className="flex flex-col items-center mb-6 text-center">
+        {/* App Rounded Icon */}
+        <div className="w-20 h-20 rounded-2xl bg-white shadow-2xl flex items-center justify-center overflow-hidden p-2.5 mb-3 border border-white/20">
+          {product.image ? (
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-contain"
             />
-          </div>
+          ) : (
+            <span className="text-black font-black text-xs text-center">
+              {product.name}
+            </span>
+          )}
         </div>
 
+        {/* Product Title */}
+        <h1 className="text-xl font-black text-white tracking-wide">
+          {product.name}
+        </h1>
+        {product.executionTime && (
+          <p className="text-[11px] text-amber-400 font-bold mt-1">
+            ⚡ سرعة التنفيذ: {product.executionTime}
+          </p>
+        )}
+      </div>
+
+      {/* Product Order Form Container (with tech-grid-bg matching Screenshot 1 & 2) */}
+      <div className="w-full max-w-md bg-[#10151f] tech-grid-bg border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl">
+        <ProductOrderForm
+          product={product}
+          currentUser={currentUser}
+          currency={currency}
+        />
+      </div>
+
+      {/* Service Terms & Guarantee details below */}
+      <div className="w-full max-w-md mt-6 space-y-3">
+        <div className="bg-[#121824] border border-white/5 rounded-2xl p-4 space-y-2 text-xs text-slate-400">
+          <div className="font-bold text-white flex items-center gap-1.5 mb-1">
+            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <span>تفاصيل وشروط الخدمة</span>
+          </div>
+          <p className="leading-relaxed">
+            {product.description || "تنفيذ فوري ومباشر وآمن لحسابك عبر أحدث البوابات المعتمدة."}
+          </p>
+          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-emerald-400 font-bold">
+            <div className="flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>ضمان كامل وأمان 100%</span>
+            </div>
+            <div className="flex items-center gap-1 text-slate-400">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span>دعم فني متواصل 24/7</span>
+            </div>
+          </div>
+        </div>
       </div>
 
     </div>

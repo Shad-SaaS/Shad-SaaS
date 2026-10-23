@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Wallet, Home, Receipt, ShoppingCart } from "lucide-react";
+import { Home, Wallet, Send, Bell, ShoppingCart, MoreHorizontal } from "lucide-react";
 
 interface BottomNavProps {
   user?: {
@@ -19,61 +19,92 @@ export default function BottomNav({ user }: BottomNavProps) {
     return null;
   }
 
-  const isActive = (path: string) => {
-    if (path === "/" && pathname === "/") return true;
-    if (path !== "/" && pathname?.startsWith(path)) return true;
-    return false;
-  };
+  const isHome = pathname === "/";
+  const isWallet = pathname?.startsWith("/wallet") || pathname?.startsWith("/deposit");
+  const isNotifications = pathname?.startsWith("/notification");
+  const isOrders = pathname?.startsWith("/orders");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#121619]/95 backdrop-blur-lg border-t border-white/10 px-2 py-2 flex items-center justify-around text-slate-400 max-w-lg mx-auto sm:rounded-t-2xl shadow-2xl">
-      {/* 1. Profile / Account */}
-      <Link
-        href={user ? "/settings" : "/login"}
-        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all ${
-          isActive("/settings") || isActive("/login") ? "text-cyan-400" : "hover:text-white"
-        }`}
-      >
-        <User className="w-5 h-5" />
-      </Link>
+    <>
+      {/* Floating 3-dots action bubble on bottom-left matching screenshots */}
+      <div className="fixed bottom-20 left-4 z-40">
+        <button
+          onClick={() => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="w-11 h-11 rounded-full bg-[#333d4e]/90 hover:bg-[#475569] text-white flex items-center justify-center shadow-lg border border-white/10 transition-transform active:scale-95"
+          title="خيارات إضافية"
+        >
+          <MoreHorizontal className="w-5 h-5 text-slate-200" />
+        </button>
+      </div>
 
-      {/* 2. Wallet */}
-      <Link
-        href={user ? "/wallet" : "/login"}
-        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all ${
-          isActive("/wallet") ? "text-cyan-400" : "hover:text-white"
-        }`}
-      >
-        <Wallet className="w-5 h-5" />
-      </Link>
+      {/* Main Persistent Bottom Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-[#0d121c]/95 backdrop-blur-md border-t border-white/5 px-4 py-2 flex items-center justify-between text-slate-400 max-w-lg mx-auto shadow-2xl">
+        
+        {/* 1. Shopping Cart / Orders (Left in LTR, Right in RTL) */}
+        <Link
+          href={user ? "/orders" : "/login"}
+          className={`flex items-center justify-center p-2 rounded-full transition-all ${
+            isOrders
+              ? "bg-[#1f2838] text-white shadow-inner"
+              : "text-slate-400 hover:text-white"
+          }`}
+          title="طلباتي"
+        >
+          <ShoppingCart className="w-5 h-5" />
+        </Link>
 
-      {/* 3. Center Home Floating Circle */}
-      <Link
-        href="/"
-        className={`flex items-center justify-center w-12 h-12 -mt-5 rounded-full bg-white text-slate-900 shadow-xl border-4 border-[#0b0e11] hover:scale-105 transition-transform ${
-          isActive("/") ? "bg-cyan-400 text-slate-950 font-black" : ""
-        }`}
-      >
-        <Home className="w-6 h-6" />
-      </Link>
+        {/* 2. Notifications Bell */}
+        <Link
+          href={user ? "/notification" : "/login"}
+          className={`flex items-center justify-center p-2 rounded-full transition-all ${
+            isNotifications
+              ? "bg-[#1f2838] text-white shadow-inner"
+              : "text-slate-400 hover:text-white"
+          }`}
+          title="الإشعارات"
+        >
+          <Bell className="w-5 h-5" />
+        </Link>
 
-      {/* 4. Financial Records / Transactions */}
-      <Link
-        href={user ? "/wallet" : "/login"}
-        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all hover:text-white`}
-      >
-        <Receipt className="w-5 h-5" />
-      </Link>
+        {/* 3. Telegram Support */}
+        <a
+          href="https://t.me"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center p-2 rounded-full text-slate-400 hover:text-cyan-400 transition-all"
+          title="قناة التلغرام والدعم"
+        >
+          <Send className="w-5 h-5" />
+        </a>
 
-      {/* 5. Orders */}
-      <Link
-        href={user ? "/orders" : "/login"}
-        className={`flex flex-col items-center justify-center gap-1 p-2 rounded-xl transition-all ${
-          isActive("/orders") ? "text-cyan-400" : "hover:text-white"
-        }`}
-      >
-        <ShoppingCart className="w-5 h-5" />
-      </Link>
-    </nav>
+        {/* 4. Wallet */}
+        <Link
+          href={user ? "/wallet" : "/login"}
+          className={`flex items-center justify-center p-2 rounded-full transition-all ${
+            isWallet
+              ? "bg-[#1f2838] text-white shadow-inner"
+              : "text-slate-400 hover:text-white"
+          }`}
+          title="المحفظة"
+        >
+          <Wallet className="w-5 h-5" />
+        </Link>
+
+        {/* 5. Home (الرئيسية) */}
+        <Link
+          href="/"
+          className={`flex items-center justify-center p-2 rounded-full transition-all ${
+            isHome
+              ? "bg-[#1f2838] text-white shadow-inner"
+              : "text-slate-400 hover:text-white"
+          }`}
+          title="الرئيسية"
+        >
+          <Home className="w-5 h-5" />
+        </Link>
+      </nav>
+    </>
   );
 }

@@ -8,6 +8,13 @@ const nextConfig = {
         hostname: "**",
       },
     ],
+  async rewrites() {
+    return [
+      {
+        source: "/category/:slug",
+        destination: "/categories/:slug",
+      },
+    ];
   },
 };
 

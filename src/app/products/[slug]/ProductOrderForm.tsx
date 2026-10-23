@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  CheckCircle2,
-  AlertCircle,
-  Tag,
-  Wallet,
-  Zap,
-  ArrowRight,
-  ShieldCheck,
+  ChevronDown,
+  ChevronUp,
+  X,
+  CreditCard,
   Loader2,
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
 } from "lucide-react";
 
 interface Variant {
@@ -19,6 +19,7 @@ interface Variant {
   name: string;
   price: number;
   originalPrice?: number | null;
+  isAvailable?: boolean;
 }
 
 interface FormField {
@@ -36,6 +37,7 @@ interface ProductOrderFormProps {
     id: string;
     name: string;
     slug: string;
+    image?: string | null;
     variants: Variant[];
     formFields: FormField[];
   };
@@ -50,26 +52,31 @@ interface ProductOrderFormProps {
 export default function ProductOrderForm({
   product,
   currentUser,
-  currency = "ل.س",
+  currency = "$",
 }: ProductOrderFormProps) {
   const router = useRouter();
 
+  // Find initial variant (first available or first)
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     product.variants[0]?.id || ""
   );
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  
+  // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
     discountAmount: number;
   } | null>(null);
-
+  const [couponOpen, setCouponOpen] = useState(false);
   const [isCheckingCoupon, setIsCheckingCoupon] = useState(false);
-  const [couponError, setCouponError] = useState("");
-  const [couponSuccess, setCouponSuccess] = useState("");
+  const [couponMessage, setCouponMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // Submission & Modals
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderError, setOrderError] = useState("");
+  const [showInsufficientBalanceModal, setShowInsufficientBalanceModal] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [orderSuccess, setOrderSuccess] = useState<string | null>(null);
 
   const selectedVariant = product.variants.find((v) => v.id === selectedVariantId);
@@ -77,9 +84,7 @@ export default function ProductOrderForm({
   const discountAmount = appliedCoupon ? appliedCoupon.discountAmount : 0;
   const finalPrice = Math.max(0, rawPrice - discountAmount);
 
-  const hasEnoughBalance = currentUser
-    ? currentUser.walletBalance >= finalPrice
-    : false;
+  const hasEnoughBalance = currentUser ? currentUser.walletBalance >= finalPrice : false;
 
   const handleInputChange = (fieldName: string, value: string) => {
     setFormData((prev) => ({ ...prev, [fieldName]: value }));
@@ -88,8 +93,7 @@ export default function ProductOrderForm({
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) return;
     setIsCheckingCoupon(true);
-    setCouponError("");
-    setCouponSuccess("");
+    setCouponMessage(null);
 
     try {
       const res = await fetch("/api/orders/price", {
@@ -104,56 +108,58 @@ export default function ProductOrderForm({
 
       const data = await res.json();
       if (!res.ok || data.error) {
-        setCouponError(data.error || "كود الخصم غير صالح");
+        setCouponMessage({ type: "error", text: data.error || "كود الخصم غير صالح" });
         setAppliedCoupon(null);
+      } else if (data.couponApplied && data.discountAmount > 0) {
+        setAppliedCoupon({
+          code: data.couponApplied.code,
+          discountAmount: data.discountAmount,
+        });
+        setCouponMessage({
+          type: "success",
+          text: `تم تفعيل الخصم بنجاح! وفرت ${data.discountAmount} ${currency}`,
+        });
       } else {
-        if (data.couponApplied && data.discountAmount > 0) {
-          setAppliedCoupon({
-            code: data.couponApplied.code,
-            discountAmount: data.discountAmount,
-          });
-          setCouponSuccess(`تم تفعيل كود الخصم! وفرت ${data.discountAmount.toLocaleString("ar-SA")} ${currency}`);
-        } else {
-          setCouponError("كود الخصم غير مطابق لشروط هذا الطلب");
-          setAppliedCoupon(null);
-        }
+        setCouponMessage({ type: "error", text: "كود الخصم غير مطابق لهذا العرض" });
+        setAppliedCoupon(null);
       }
     } catch {
-      setCouponError("تعذر التحقق من كود الخصم");
+      setCouponMessage({ type: "error", text: "تعذر الاتصال بالخادم للتحقق من الكود" });
     } finally {
       setIsCheckingCoupon(false);
     }
   };
 
-  // Re-calculate coupon discount if variant changes
-  useEffect(() => {
-    if (appliedCoupon && selectedVariantId) {
-      handleApplyCoupon();
-    }
-  }, [selectedVariantId]);
-
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!currentUser) {
       router.push(`/login?redirect=/products/${product.slug}`);
       return;
     }
 
-    // Validate required fields
+    // Validate package selection
+    if (!selectedVariantId) {
+      setOrderError("يرجى اختيار الباقة المطلوبة");
+      return;
+    }
+
+    // Validate dynamic inputs
     for (const field of product.formFields) {
       if (field.isRequired && (!formData[field.fieldName] || !formData[field.fieldName].trim())) {
-        setOrderError(`يرجى ملء حقل (${field.label})`);
+        setOrderError(`يرجى إدخال ${field.label}`);
         return;
       }
     }
 
+    // Check balance
     if (!hasEnoughBalance) {
-      setOrderError("رصيد المحفظة غير كافٍ. يرجى شحن الرصيد أولاً.");
+      setShowInsufficientBalanceModal(true);
       return;
     }
 
     setIsSubmitting(true);
-    setOrderError("");
+    setOrderError(null);
 
     try {
       const res = await fetch("/api/orders/create", {
@@ -170,7 +176,11 @@ export default function ProductOrderForm({
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setOrderError(data.error || "فشل إتمام الطلب");
+        if (data.error && data.error.includes("رصيد")) {
+          setShowInsufficientBalanceModal(true);
+        } else {
+          setOrderError(data.error || "تعذر تنفيذ الطلب");
+        }
       } else {
         setOrderSuccess(data.order.orderNumber);
         setTimeout(() => {
@@ -178,7 +188,7 @@ export default function ProductOrderForm({
         }, 1500);
       }
     } catch (err: any) {
-      setOrderError("حدث خطأ في الاتصال بالخادم: " + err.message);
+      setOrderError("حدث خطأ في الاتصال بالخادم: " + (err.message || ""));
     } finally {
       setIsSubmitting(false);
     }
@@ -186,22 +196,22 @@ export default function ProductOrderForm({
 
   if (orderSuccess) {
     return (
-      <div className="glass-panel p-8 rounded-3xl text-center border border-emerald-500/30 animate-in zoom-in-95 duration-200">
+      <div className="bg-[#121824] border border-emerald-500/30 rounded-3xl p-8 text-center animate-in zoom-in-95">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
           <CheckCircle2 className="w-8 h-8" />
         </div>
-        <h3 className="text-2xl font-black text-white mb-2">تم تأكيد طلبك بنجاح!</h3>
-        <p className="text-slate-300 text-sm mb-4">
-          رقم الطلب: <span className="font-mono font-bold text-cyan-400">{orderSuccess}</span>
+        <h3 className="text-xl font-black text-white mb-2">تم تأكيد طلبك بنجاح!</h3>
+        <p className="text-sm text-slate-300 mb-4">
+          رقم الطلب: <span className="font-mono font-bold text-amber-400">{orderSuccess}</span>
         </p>
         <p className="text-xs text-slate-400 mb-6">
-          تم خصم المبلغ من رصيد محفظتك، وجارٍ معالجة الطلب فورياً. يتم تحويلك إلى سجل الطلبات...
+          جاري المعالجة الفورية... يتم تحويلك تلقائياً إلى صفحة طلباتي
         </p>
         <Link
           href="/orders"
-          className="glow-btn px-6 py-2.5 rounded-xl text-xs font-bold inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 bg-[#334155] hover:bg-[#475569] text-white text-xs font-bold px-6 py-2.5 rounded-xl transition-all"
         >
-          <span>عرض طلباتي الآن</span>
+          <span>الانتقال لطلباتي</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -209,191 +219,211 @@ export default function ProductOrderForm({
   }
 
   return (
-    <form onSubmit={handleSubmitOrder} className="space-y-6">
-      
-      {/* 1. Variant Packages Selector */}
-      <div className="space-y-3">
-        <label className="block text-sm font-bold text-white">
-          1. اختر الباقة أو الفئة المطلوبة:
-        </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {product.variants.map((variant) => {
-            const isSelected = variant.id === selectedVariantId;
-            return (
-              <div
-                key={variant.id}
-                onClick={() => setSelectedVariantId(variant.id)}
-                className={`cursor-pointer p-3.5 rounded-2xl border transition-all text-right flex items-center justify-between ${
-                  isSelected
-                    ? "bg-blue-600/20 border-blue-500 shadow-lg shadow-blue-500/20"
-                    : "bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10"
-                }`}
-              >
-                <div>
-                  <div className={`text-xs font-bold ${isSelected ? "text-white" : "text-slate-200"}`}>
-                    {variant.name}
-                  </div>
-                  {variant.originalPrice && variant.originalPrice > variant.price && (
-                    <div className="text-[10px] text-slate-500 line-through">
-                      {variant.originalPrice.toLocaleString("ar-SA")} {currency}
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-left font-mono">
-                  <span className={`text-sm font-black ${isSelected ? "text-cyan-300" : "text-white"}`}>
-                    {variant.price.toLocaleString("ar-SA")}
-                  </span>{" "}
-                  <span className="text-[10px] text-slate-400 font-tajawal">{currency}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 2. Dynamic Custom Form Fields */}
-      {product.formFields.length > 0 && (
-        <div className="space-y-3 pt-3 border-t border-white/10">
-          <label className="block text-sm font-bold text-white">
-            2. بيانات تنفيذ الطلب:
+    <div className="w-full">
+      <form onSubmit={handleSubmitOrder} className="space-y-4">
+        
+        {/* 1. Package Select Dropdown (اختر_الباقة) */}
+        <div className="space-y-1.5 text-right">
+          <label className="block text-xs font-bold text-slate-300">
+            اختر_الباقة
           </label>
-          <div className="space-y-3">
-            {product.formFields.map((field) => (
-              <div key={field.id}>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  {field.label} {field.isRequired && <span className="text-rose-400">*</span>}
-                </label>
-                <input
-                  type={field.fieldType === "number" ? "number" : "text"}
-                  placeholder={field.placeholder || ""}
-                  required={field.isRequired}
-                  value={formData[field.fieldName] || ""}
-                  onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 focus:border-blue-500 focus:outline-none text-white text-sm transition-colors"
-                />
+
+          <div className="relative">
+            {/* Main Select Button */}
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen((prev) => !prev)}
+              className="w-full bg-[#161c28] border border-white/10 hover:border-white/20 rounded-xl px-4 py-3 text-right flex items-center justify-between text-sm text-white focus:outline-none transition-colors"
+            >
+              <span className="font-medium truncate">
+                {selectedVariant ? selectedVariant.name : "اختر اختر_الباقة"}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Custom Options List (as in Screenshot 2) */}
+            {isDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-30 bg-[#161c28] border border-white/10 rounded-xl overflow-hidden shadow-2xl divide-y divide-white/5 max-h-72 overflow-y-auto">
+                {product.variants.map((v) => {
+                  const isSelected = v.id === selectedVariantId;
+                  const isAvailable = v.isAvailable !== false;
+
+                  return (
+                    <div
+                      key={v.id}
+                      onClick={() => {
+                        if (isAvailable) {
+                          setSelectedVariantId(v.id);
+                          setIsDropdownOpen(false);
+                        }
+                      }}
+                      className={`px-4 py-3 text-sm flex items-center justify-between cursor-pointer transition-colors ${
+                        isSelected
+                          ? "bg-[#eab308] text-white font-bold"
+                          : isAvailable
+                          ? "hover:bg-white/5 text-slate-200"
+                          : "text-slate-500 opacity-60 cursor-not-allowed line-through"
+                      }`}
+                    >
+                      {/* Price on Left */}
+                      <span className={`font-mono text-xs ${isSelected ? "text-white" : isAvailable ? "text-amber-400" : "text-slate-500"}`}>
+                        {v.price.toLocaleString("en-US", { minimumFractionDigits: 2 })} $
+                      </span>
+
+                      {/* Name on Right */}
+                      <span className="truncate pr-2">
+                        {v.name} {!isAvailable && <span className="text-red-500 text-xs font-bold mr-1">(غير متوفر)</span>}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
+            )}
           </div>
         </div>
-      )}
 
-      {/* 3. Coupon Code Input */}
-      <div className="space-y-2 pt-3 border-t border-white/10">
-        <label className="block text-xs font-bold text-slate-300">
-          كود الخصم (اختياري):
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="مثال: WELCOME10"
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-            className="flex-1 px-4 py-2 rounded-xl bg-slate-900/80 border border-white/10 focus:border-blue-500 focus:outline-none text-white text-xs uppercase font-mono"
-          />
+        {/* 2. Dynamic Inputs based on product form fields */}
+        {product.formFields.map((field) => (
+          <div key={field.id} className="space-y-1.5 text-right">
+            <label className="block text-xs font-bold text-slate-300">
+              {field.label}
+            </label>
+            <input
+              type={field.fieldType === "password" ? "password" : "text"}
+              value={formData[field.fieldName] || ""}
+              onChange={(e) => handleInputChange(field.fieldName, e.target.value)}
+              placeholder={field.placeholder || `أدخل ${field.label}`}
+              required={field.isRequired}
+              className="w-full bg-[#161c28] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition-colors"
+            />
+          </div>
+        ))}
+
+        {/* Coupon Code Drawer / Toggle */}
+        <div className="pt-1">
           <button
             type="button"
-            onClick={handleApplyCoupon}
-            disabled={isCheckingCoupon || !couponCode.trim()}
-            className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white disabled:opacity-50 transition-colors"
+            onClick={() => setCouponOpen((prev) => !prev)}
+            className="text-[11px] text-amber-400 hover:text-amber-300 font-bold flex items-center gap-1"
           >
-            {isCheckingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "تطبيق"}
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>هل لديك كود خصم أو قسيمة؟</span>
           </button>
-        </div>
-        {couponError && <p className="text-[11px] text-rose-400">{couponError}</p>}
-        {couponSuccess && <p className="text-[11px] text-emerald-400">{couponSuccess}</p>}
-      </div>
 
-      {/* 4. Pricing Summary & Wallet Check */}
-      <div className="p-4 rounded-2xl bg-slate-950/70 border border-white/10 space-y-2 text-xs">
-        <div className="flex justify-between text-slate-400">
-          <span>سعر الباقة:</span>
-          <span className="font-mono text-white">
-            {rawPrice.toLocaleString("ar-SA")} {currency}
-          </span>
+          {couponOpen && (
+            <div className="mt-2 p-3 bg-white/5 rounded-xl border border-white/5 space-y-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="أدخل كود الخصم"
+                  className="flex-1 bg-[#121824] border border-white/10 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-400"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={isCheckingCoupon || !couponCode.trim()}
+                  className="bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-black font-bold text-xs px-4 py-2 rounded-lg transition-colors"
+                >
+                  {isCheckingCoupon ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "تطبيق"}
+                </button>
+              </div>
+
+              {couponMessage && (
+                <div
+                  className={`text-xs ${
+                    couponMessage.type === "success" ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {couponMessage.text}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {discountAmount > 0 && (
-          <div className="flex justify-between text-emerald-400">
-            <span>الخصم المطبق ({appliedCoupon?.code}):</span>
-            <span className="font-mono">
-              -{discountAmount.toLocaleString("ar-SA")} {currency}
-            </span>
+        {/* Error message */}
+        {orderError && (
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs text-center font-bold">
+            {orderError}
           </div>
         )}
 
-        <div className="pt-2 border-t border-white/10 flex justify-between items-center text-sm font-bold">
-          <span className="text-white">المجموع النهائي:</span>
-          <span className="font-mono text-lg text-cyan-300 font-black">
-            {finalPrice.toLocaleString("ar-SA")} {currency}
-          </span>
+        {/* 3. Total Price Card (Green Container matching Screenshot 2) */}
+        <div className="bg-[#00c076] text-white rounded-2xl p-4 text-center shadow-lg shadow-emerald-500/10 space-y-1">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-50">
+            <CreditCard className="w-4 h-4" />
+            <span>السعر الإجمالي</span>
+          </div>
+          <div className="text-2xl font-black font-mono tracking-tight text-white">
+            $ {finalPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 3 })}
+          </div>
         </div>
 
-        {/* User Balance Status */}
-        {currentUser && (
-          <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px]">
-            <span className="text-slate-400 flex items-center gap-1">
-              <Wallet className="w-3.5 h-3.5 text-blue-400" />
-              رصيدك في المحفظة:
-            </span>
-            <span className={`font-mono font-bold ${hasEnoughBalance ? "text-emerald-400" : "text-rose-400"}`}>
-              {currentUser.walletBalance.toLocaleString("ar-SA")} {currency}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {orderError && (
-        <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{orderError}</span>
-        </div>
-      )}
-
-      {/* 5. Checkout Action Button */}
-      {currentUser ? (
-        hasEnoughBalance ? (
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-3.5 rounded-xl glow-btn font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span>جارٍ خصم الرصيد وإنشاء الطلب...</span>
-              </>
-            ) : (
-              <>
-                <ShieldCheck className="w-4 h-4" />
-                <span>تأكيد الطلب وخصم ({finalPrice.toLocaleString("ar-SA")} {currency})</span>
-              </>
-            )}
-          </button>
-        ) : (
-          <div className="space-y-2">
-            <Link
-              href="/wallet"
-              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition-colors"
-            >
-              <Wallet className="w-4 h-4" />
-              <span>رصيدك غير كافٍ — اضغط هنا لشحن المحفظة</span>
-            </Link>
-            <p className="text-[11px] text-center text-slate-500">
-              المبلغ المطلوب: {finalPrice.toLocaleString("ar-SA")} {currency} | المتاح: {currentUser.walletBalance.toLocaleString("ar-SA")} {currency}
-            </p>
-          </div>
-        )
-      ) : (
-        <Link
-          href={`/login?redirect=/products/${product.slug}`}
-          className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-2 transition-colors"
+        {/* 4. Submit Order Button (إرسال الطلب matching Screenshot 1 & 2) */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full bg-[#1b2230] hover:bg-[#232c3e] border border-white/10 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.99] disabled:opacity-50 text-sm shadow-md"
         >
-          <span>تسجيل الدخول لإتمام عملية الشراء</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+              <span>جاري إرسال الطلب...</span>
+            </>
+          ) : (
+            <>
+              <span>إرسال الطلب</span>
+              <span className="text-base leading-none">←</span>
+            </>
+          )}
+        </button>
+
+      </form>
+
+      {/* 5. Insufficient Balance Popup Modal (matching Screenshot 3) */}
+      {showInsufficientBalanceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-[#151922] border border-white/10 rounded-3xl p-6 text-center max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
+            
+            {/* Red Circle with X */}
+            <div className="w-14 h-14 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mx-auto mb-3">
+              <X className="w-8 h-8 stroke-[2.5]" />
+            </div>
+
+            {/* Red Title: فشل الطلب */}
+            <h3 className="text-lg font-black text-red-500 mb-4">
+              فشل الطلب
+            </h3>
+
+            {/* Gray box with message: رصيد غير كافي لإتمام العملية */}
+            <div className="bg-[#1f2533] text-slate-200 text-xs sm:text-sm font-medium py-3 px-4 rounded-xl mb-6">
+              رصيد غير كافي لإتمام العملية
+            </div>
+
+            {/* Gold Button: حسناً */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setShowInsufficientBalanceModal(false)}
+                className="w-full bg-[#f59e0b] hover:bg-amber-500 text-black font-black py-3 rounded-xl transition-colors text-sm shadow-lg shadow-amber-500/20"
+              >
+                حسناً
+              </button>
+
+              <Link
+                href="/deposit"
+                className="block text-xs text-amber-400 hover:underline pt-1 font-bold"
+              >
+                + شحن المحفظة الآن
+              </Link>
+            </div>
+
+          </div>
+        </div>
       )}
 
-    </form>
+    </div>
   );
 }
