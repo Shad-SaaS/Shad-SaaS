@@ -31,13 +31,30 @@ export async function POST(req: Request) {
       customerInputs,
     });
 
+    // If product is linked to API Provider, dispatch immediately
+    if (order.product?.providerType === "API") {
+      const { ProviderOrderDispatcher } = await import("@/services/provider-order.dispatcher");
+      try {
+        const dispatchResult = await ProviderOrderDispatcher.dispatchOrder(order.id);
+        console.log(`[OrderCreate] Dispatched order ${order.orderNumber}: status = ${dispatchResult.status}`);
+      } catch (dispatchErr) {
+        console.error(`[OrderCreate] Dispatch failed for order ${order.orderNumber}:`, dispatchErr);
+      }
+    }
+
+    // Refresh order data
+    const finalOrder = await (await import("@/lib/db")).prisma.order.findUnique({
+      where: { id: order.id },
+    });
+
     return NextResponse.json({
       success: true,
       order: {
-        id: order.id,
-        orderNumber: order.orderNumber,
-        totalAmount: order.totalAmount,
-        status: order.status,
+        id: finalOrder?.id || order.id,
+        orderNumber: finalOrder?.orderNumber || order.orderNumber,
+        totalAmount: finalOrder?.totalAmount || order.totalAmount,
+        status: finalOrder?.status || order.status,
+        deliveryNotes: finalOrder?.deliveryNotes,
       },
     });
   } catch (err: any) {
