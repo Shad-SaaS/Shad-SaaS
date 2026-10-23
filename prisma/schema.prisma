@@ -82,6 +82,7 @@ model Product {
   formFields  ProductFormField[]
   orders      Order[]
   autoCodes   AutoCode[]
+  providerProducts ProviderProduct[]
 }
 
 model ProductVariant {
@@ -136,6 +137,7 @@ model Order {
   product       Product              @relation(fields: [productId], references: [id], onDelete: Restrict)
   items         OrderItem[]
   statusHistory OrderStatusHistory[]
+  providerOrders ProviderOrder[]
 }
 
 model OrderItem {
@@ -352,3 +354,89 @@ model AuditLog {
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
+
+// ==========================================
+// UNIFIED PROVIDER ADAPTERS ARCHITECTURE
+// (Portable across SQLite, MySQL, PostgreSQL)
+// ==========================================
+
+model Provider {
+  id                   String    @id @default(cuid())
+  name                 String
+  template             String    @default("client_api_v1") // client_api_v1, modc_agent, etc.
+  baseUrl              String
+  credentialsEncrypted String    // AES-256-GCM encrypted JSON
+  config               String?   // JSON configuration string
+  isActive             Boolean   @default(true)
+  priority             Int       @default(1)
+  timeoutMs            Int       @default(15000)
+  rateLimitPerMin      Int?
+  lastBalance          Float?
+  lastBalanceAt        DateTime?
+  lastError            String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  providerProducts ProviderProduct[]
+  providerOrders   ProviderOrder[]
+  webhookEvents    ProviderWebhookEvent[]
+  syncLogs         ProviderSyncLog[]
+}
+
+model ProviderProduct {
+  id                String   @id @default(cuid())
+  storeProductId    String
+  providerId        String
+  externalProductId String
+  costOverride      Float?
+  priority          Int      @default(1)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [storeProductId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, externalProductId, storeProductId])
+}
+
+model ProviderOrder {
+  id               String   @id @default(cuid())
+  storeOrderId     String
+  providerId       String
+  orderUuid        String   @unique // Strict idempotency guard
+  externalOrderId  String?
+  status           String   @default("pending") // accepted, rejected, pending, needs_review
+  attempts         Int      @default(1)
+  requestSnapshot  String?  // Sanitized JSON without secrets
+  responseSnapshot String?  // Sanitized JSON
+  errorCode        String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Restrict)
+  order    Order    @relation(fields: [storeOrderId], references: [id], onDelete: Restrict)
+}
+
+model ProviderWebhookEvent {
+  id             String   @id @default(cuid())
+  providerId     String
+  payload        String
+  signatureValid Boolean  @default(false)
+  processed      Boolean  @default(false)
+  receivedAt     DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
+model ProviderSyncLog {
+  id         String   @id @default(cuid())
+  providerId String
+  action     String
+  status     String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+}
+
