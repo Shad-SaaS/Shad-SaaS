@@ -11,7 +11,8 @@ interface Product {
   name: string;
   slug: string;
   image?: string | null;
-  basePrice: number;
+  minPrice?: number;
+  basePrice?: number;
   isActive: boolean;
   executionTime?: string | null;
   category?: {
@@ -57,9 +58,9 @@ export default function CategoryProductsClient({
   );
 
   const handleCardClick = (product: Product) => {
-    // If not logged in, redirect to login
-    if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+    // If product has multiple variants or dynamic fields, go to dedicated product order page
+    if (product.variants && product.variants.length > 1) {
+      router.push(`/products/${product.slug}`);
       return;
     }
 
@@ -83,10 +84,12 @@ export default function CategoryProductsClient({
       inputLabel = "phone";
     }
 
+    const itemPrice = product.minPrice ?? product.basePrice ?? (product.variants?.[0]?.price ?? 0);
+
     setSelectedItem({
       id: product.id,
       name: product.name,
-      price: product.basePrice,
+      price: itemPrice,
       currency: currency,
       categoryName: category.name,
       inputType,
@@ -134,6 +137,7 @@ export default function CategoryProductsClient({
         <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
           {filteredProducts.map((product) => {
             const isUnavailable = !product.isActive;
+            const price = product.minPrice ?? product.basePrice ?? (product.variants?.[0]?.price ?? 0);
 
             return (
               <div
@@ -170,7 +174,7 @@ export default function CategoryProductsClient({
 
                   {/* Price overlay badge */}
                   <div className="absolute bottom-2 right-2 bg-black/75 backdrop-blur-md px-2 py-0.5 rounded-lg border border-white/10 text-[10px] font-mono font-bold text-amber-300">
-                    {product.basePrice.toFixed(2)} $
+                    {price.toFixed(2)} $
                   </div>
                 </div>
 
