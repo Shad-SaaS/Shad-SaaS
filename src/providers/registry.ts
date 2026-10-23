@@ -80,7 +80,12 @@ export const DriverRegistry = new DriverRegistryImpl();
 // Automatically register default supplier drivers
 import { ClientApiV1Driver } from "./drivers/client-api-v1.driver";
 import { ModcAgentDriver } from "./drivers/modc-agent.driver";
+import { SamApiPaymentDriver } from "./drivers/sam-api-payment.driver";
 
 DriverRegistry.registerSupplier(new ClientApiV1Driver());
 DriverRegistry.registerSupplier(new ModcAgentDriver());
+
+// Register default payment driver (separated from suppliers!)
+DriverRegistry.registerPayment(new SamApiPaymentDriver());
+
 

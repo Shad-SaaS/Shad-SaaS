@@ -5,3 +5,4 @@ export * from "./registry";
 export * from "./template-driver";
 export * from "./drivers/client-api-v1.driver";
 export * from "./drivers/modc-agent.driver";
+export * from "./drivers/sam-api-payment.driver";

@@ -184,12 +184,14 @@ export class WalletService {
       }
 
       // Mark deposit as approved
+      const isAuto = reviewedByAdminId === "system_sam_api" || reviewedByAdminId === "system_sam_webhook";
       const updatedDeposit = await tx.depositRequest.update({
         where: { id: depositId },
         data: {
           status: "APPROVED",
-          reviewedByUserId: reviewedByAdminId,
+          reviewedByUserId: !isAuto ? reviewedByAdminId : null,
           reviewedAt: new Date(),
+          isAutoVerified: isAuto,
         },
       });
 
@@ -204,12 +206,18 @@ export class WalletService {
         tx
       );
 
-      // Audit log
+      // Audit log (validate adminId exists in user table)
+      let validAdminUserId = null;
+      if (reviewedByAdminId && !reviewedByAdminId.startsWith("system_")) {
+        const adminUser = await tx.user.findUnique({ where: { id: reviewedByAdminId }, select: { id: true } });
+        if (adminUser) validAdminUserId = adminUser.id;
+      }
+
       await tx.auditLog.create({
         data: {
           action: "APPROVE_DEPOSIT",
-          userId: reviewedByAdminId,
-          details: `الموافقة على شحن رصيد بمبلغ ${deposit.amount} للعميل ${deposit.userId} - رقم الطلب: ${deposit.depositNumber}`,
+          userId: validAdminUserId,
+          details: `الموافقة على شحن رصيد بمبلغ ${deposit.amount} للعميل ${deposit.userId} - رقم الطلب: ${deposit.depositNumber} (${reviewedByAdminId})`,
         },
       });
 
