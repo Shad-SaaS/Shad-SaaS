@@ -76,3 +76,11 @@ class DriverRegistryImpl {
 
 // Global Singleton Instance
 export const DriverRegistry = new DriverRegistryImpl();
+
+// Automatically register default supplier drivers
+import { ClientApiV1Driver } from "./drivers/client-api-v1.driver";
+import { ModcAgentDriver } from "./drivers/modc-agent.driver";
+
+DriverRegistry.registerSupplier(new ClientApiV1Driver());
+DriverRegistry.registerSupplier(new ModcAgentDriver());
+
