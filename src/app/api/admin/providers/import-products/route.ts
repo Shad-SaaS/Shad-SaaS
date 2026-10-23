@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
       const fieldLabel = p.params && p.params[0] ? p.params[0] : "معرف الحساب / Player ID";
 
-      await prisma.product.create({
+      const createdProduct = await prisma.product.create({
         data: {
           categoryId,
           name: p.name,
@@ -52,6 +52,17 @@ export async function POST(req: Request) {
                 fieldType: "text",
                 placeholder: fieldLabel,
                 isRequired: true,
+              },
+            ],
+          },
+          providerProducts: {
+            create: [
+              {
+                providerId,
+                externalProductId: String(p.id),
+                costOverride: costUsd,
+                priority: 1,
+                isActive: true,
               },
             ],
           },

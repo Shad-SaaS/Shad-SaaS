@@ -132,8 +132,8 @@ export class PaymentVerificationService {
 
     const { driver, ctx } = samInfo;
 
-    // Target invoice ID: either passed directly or stored in proofImage/note
-    const targetInvoiceId = invoiceId || deposit.proofImage;
+    // Target invoice ID: either passed directly or stored in receiptImageUrl/note
+    const targetInvoiceId = invoiceId || deposit.receiptImageUrl;
     if (!targetInvoiceId) {
       return {
         success: false,
@@ -194,7 +194,7 @@ export class PaymentVerificationService {
     const deposit = await prisma.depositRequest.findFirst({
       where: {
         OR: [
-          { proofImage: invoiceId },
+          { receiptImageUrl: invoiceId },
           { referenceNumber: transactionRef || "___non_matching___" },
         ],
         status: "PENDING",

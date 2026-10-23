@@ -186,7 +186,7 @@ async function runPaymentDriverTests() {
       webhookUrl: "http://localhost:3000/api/webhooks/payments/sam-api",
     });
     assert(invoice.id === "3f8a1c2d-4e5b-6f7a-8b9c-0d1e2f3a4b5c", "Invoice created with correct ID");
-    assert(invoice.paymentUrl?.includes("pay/3f8a1c2d"), "Payment URL generated");
+    assert(Boolean(invoice.paymentUrl?.includes("pay/3f8a1c2d")), "Payment URL generated");
 
     // 4. Verify Invoice (Success)
     const verifySuccess = await driver!.verifyInvoice(ctx, invoice.id, "TXN_VALID_99");
@@ -199,7 +199,7 @@ async function runPaymentDriverTests() {
 
     // 6. Verify Invoice (Expired HTTP 410)
     const verifyExpired = await driver!.verifyInvoice(ctx, invoice.id, "TXN_EXPIRED");
-    assert(verifyExpired.verified === false && verifyExpired.code === "EXPIRED", "Expired invoice caught properly");
+    assert(Boolean(!verifyExpired.verified && verifyExpired.code === "EXPIRED"), "Expired invoice caught properly");
 
     // -------------------------------------------------------------
     // Test Group 2: PaymentVerificationService & Anti-Fraud
