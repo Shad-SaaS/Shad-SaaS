@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -56,10 +57,11 @@ export default async function RootLayout({
           storeName={storeName}
           storeLogo={storeLogo}
         />
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6">
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 sm:pb-6">
           {children}
         </main>
         <Footer />
+        <BottomNav user={user} />
       </body>
     </html>
   );
