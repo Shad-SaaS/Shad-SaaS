@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const admin = await requireAuth("ADMIN");
-    const { providerId, categoryId, profitMarginPercent = 15, exchangeRate = 14500, products } = await req.json();
+    const { providerId, categoryId, profitMarginPercent = 15, exchangeRate = 145, products } = await req.json();
 
     if (!providerId || !categoryId || !products || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: "بيانات الاستيراد غير مكتملة" }, { status: 400 });

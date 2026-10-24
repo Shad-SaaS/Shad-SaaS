@@ -63,9 +63,10 @@ export default function Header({
   const userNumericId = user ? (user.id.replace(/\D/g, "").slice(-4) || "1006") : "";
   const isHomePage = pathname === "/";
 
-  // Balance display based on currency toggle
+  // Balance display with redenomination applied (تطبيق قرار حذف 00 من العملة السورية: 1 USD = 145 ل.س بدلاً من 14500)
+  const sypRate = 145;
   const displayBalance = secondaryCurrencyActive
-    ? `${(user ? user.walletBalance * 14500 : 0).toLocaleString()} ل.س`
+    ? `${(user ? user.walletBalance * sypRate : 0).toLocaleString()} ل.س`
     : `${user ? user.walletBalance.toFixed(2) : "0"} $`;
 
   return (

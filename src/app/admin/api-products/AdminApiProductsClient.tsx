@@ -41,7 +41,7 @@ export default function AdminApiProductsClient({
   const [selectedProviderId, setSelectedProviderId] = useState(providers[0]?.id || "");
   const [selectedCategoryId, setSelectedCategoryId] = useState(categories[0]?.id || "");
   const [profitMargin, setProfitMargin] = useState("15");
-  const [exchangeRate, setExchangeRate] = useState("14500");
+  const [exchangeRate, setExchangeRate] = useState("145");
 
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
