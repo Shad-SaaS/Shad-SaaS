@@ -24,6 +24,7 @@ import {
   Send,
   Download,
   Wallet,
+  Sparkles,
 } from "lucide-react";
 
 interface HeaderProps {
@@ -69,54 +70,39 @@ export default function Header({
 
   return (
     <>
-      {/* Main Top Header matching screenshots */}
-      <header className="sticky top-0 z-40 bg-[#0c1017]/95 backdrop-blur-md border-b border-white/5 px-3 py-2 transition-all">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-2">
+      {/* Main Top Header matching reference image */}
+      <header className="sticky top-0 z-40 bg-[#0c1017]/95 backdrop-blur-md border-b border-white/5 px-4 py-2.5 transition-all">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           
-          {/* Logo on Right (in RTL) */}
-          <Link href="/" className="flex items-center gap-2">
-            {storeLogo ? (
-              <img
-                src={storeLogo}
-                alt={storeName}
-                className="h-8 w-auto max-w-[130px] object-contain rounded-lg"
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/20 border border-amber-300/40">
-                <span className="font-black text-slate-950 text-xs tracking-tighter">VIP</span>
-              </div>
-            )}
-            <span className="font-black text-white text-sm tracking-tight">{storeName}</span>
+          {/* Left: Gold Emblem Logo + Shad-Vip Name */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 via-amber-600 to-yellow-400 flex items-center justify-center shadow-lg shadow-amber-500/25 border border-amber-300/40 group-hover:scale-105 transition-transform">
+              <span className="font-black text-slate-950 text-xs tracking-tighter">VIP</span>
+            </div>
+            <span className="font-black text-white text-base tracking-wide group-hover:text-amber-400 transition-colors">
+              Shad-Vip
+            </span>
           </Link>
 
-          {/* Action Icons on Left */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right: User action icons & Hamburger menu */}
+          <div className="flex items-center gap-2">
             
             {/* Back button (shown on subpages) */}
             {!isHomePage && (
               <button
                 onClick={() => router.back()}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white transition-colors"
+                className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
                 title="رجوع"
               >
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4" />
               </button>
             )}
 
-            {/* Hamburger Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white transition-colors"
-              aria-label="القائمة"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-
-            {/* Wallet Balance Badge (coin icon / 0$ +) */}
+            {/* Wallet Balance Badge */}
             {user ? (
               <Link
                 href="/deposit"
-                className="flex items-center gap-1 bg-[#141b26] border border-white/10 hover:border-amber-400/40 rounded-full px-2 py-0.5 text-xs font-mono font-bold text-white transition-all shadow-inner"
+                className="flex items-center gap-1.5 bg-[#141b26] border border-white/10 hover:border-amber-400/40 rounded-full px-2.5 py-1 text-xs font-mono font-bold text-white transition-all shadow-inner"
               >
                 <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-black">
                   +
@@ -126,7 +112,7 @@ export default function Header({
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-1 bg-[#141b26] border border-white/10 hover:border-amber-400/40 rounded-full px-2 py-0.5 text-xs font-mono font-bold text-slate-300"
+                className="flex items-center gap-1.5 bg-[#141b26] border border-white/10 hover:border-amber-400/40 rounded-full px-2.5 py-1 text-xs font-mono font-bold text-slate-300 hover:text-white"
               >
                 <span className="w-4 h-4 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-black">
                   +
@@ -138,59 +124,74 @@ export default function Header({
             {/* Notification Bell */}
             <Link
               href="/notification"
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white transition-colors relative"
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative"
               title="الإشعارات"
             >
               <Bell className="w-4 h-4" />
               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
             </Link>
 
-            {/* Profile Icon / Favorites */}
+            {/* User Profile Icon */}
             <Link
-              href={user ? "/favorites" : "/login"}
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white transition-colors"
-              title="المفضلة أو الحساب"
+              href={user ? "/wallet" : "/login"}
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              title="حسابي"
             >
               <UserIcon className="w-4 h-4" />
             </Link>
+
+            {/* Hamburger Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="القائمة"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
           </div>
+
         </div>
       </header>
 
-      {/* Side Drawer (Opens from Right in RTL) */}
+      {/* Side Drawer (Opens strictly from RIGHT in RTL - Point 4) */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm animate-fade-in">
-          {/* Overlay click to close */}
-          <div className="flex-1" onClick={() => setMobileMenuOpen(false)} />
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          {/* Backdrop click to close */}
+          <div
+            className="absolute inset-0"
+            onClick={() => setMobileMenuOpen(false)}
+          />
 
-          <div className="w-full max-w-[290px] sm:max-w-xs bg-[#111622] border-r border-white/10 h-full overflow-y-auto flex flex-col justify-between p-4 text-right shadow-2xl relative">
+          {/* Drawer Panel - Anchored to the RIGHT */}
+          <div className="absolute top-0 bottom-0 right-0 w-full max-w-[300px] bg-[#10151f] border-l border-white/10 h-full overflow-y-auto flex flex-col justify-between p-4 text-right shadow-2xl z-10 animate-in slide-in-from-right duration-200">
             
-            {/* Close Button */}
+            {/* Close Button on Top-Left */}
             <button
               onClick={() => setMobileMenuOpen(false)}
-              className="absolute top-4 left-4 p-1 rounded-lg text-slate-400 hover:text-white"
+              className="absolute top-4 left-4 p-1.5 rounded-xl bg-white/5 text-slate-400 hover:text-white transition-colors"
+              title="إغلاق"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div>
               {/* ------------------------------------------- */}
-              {/* STATE A: User is NOT Logged In (Screenshot 3) */}
+              {/* STATE A: User is NOT Logged In */}
               {/* ------------------------------------------- */}
               {!user ? (
-                <div className="space-y-4 pt-4">
-                  {/* Top Gray Card */}
-                  <div className="bg-[#1c2432] p-4 rounded-2xl border border-white/5 space-y-3">
+                <div className="space-y-4 pt-3">
+                  {/* Top Slate Card */}
+                  <div className="bg-[#18202d] p-4 rounded-2xl border border-white/5 space-y-3">
                     <h3 className="font-black text-white text-base">تسجيل الدخول</h3>
                     <p className="text-xs text-slate-400 leading-relaxed">
-                      قم بتسجيل الدخول وتمتع بتجربة شراء سهلة
+                      قم بتسجيل الدخول وتمتع بتجربة شراء فورية وآمنة
                     </p>
                     
-                    {/* Bright Green Login Button */}
+                    {/* Modern Green Login Button */}
                     <Link
                       href="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full bg-[#00e676] hover:bg-[#00c853] text-slate-950 font-black py-2.5 rounded-xl text-center text-xs transition-colors shadow-md"
+                      className="block w-full btn-vip-emerald py-2.5 rounded-xl text-center text-xs shadow-md"
                     >
                       تسجيل الدخول
                     </Link>
@@ -228,115 +229,101 @@ export default function Header({
                     <Link
                       href="/"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl bg-[#1c2432] text-white font-bold text-xs"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <Home className="w-4 h-4 text-emerald-400" />
-                        <span>الرئيسية</span>
-                      </div>
+                      <Home className="w-4 h-4 text-amber-400" />
+                      <span>الرئيسية</span>
                     </Link>
 
                     <Link
-                      href="/"
+                      href="/categories/games"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <Bot className="w-4 h-4 text-purple-400" />
-                        <span>خدمات VIP</span>
-                      </div>
-                      <span className="bg-slate-700 text-slate-200 text-[10px] px-1.5 py-0.5 rounded-md">جديد</span>
+                      <Smartphone className="w-4 h-4 text-emerald-400" />
+                      <span>شحن الألعاب</span>
                     </Link>
 
                     <Link
-                      href="/agents"
+                      href="/categories/ai-tools"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
                     >
-                      <Users className="w-4 h-4 text-cyan-400" />
-                      <span>وكلاؤنا</span>
+                      <Bot className="w-4 h-4 text-purple-400" />
+                      <span>الذكاء الاصطناعي</span>
                     </Link>
 
                     <Link
                       href="/about"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
                     >
-                      <Info className="w-4 h-4 text-blue-400" />
+                      <Info className="w-4 h-4 text-cyan-400" />
                       <span>من نحن</span>
                     </Link>
 
                     <Link
                       href="/policy"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 text-xs font-bold transition-colors"
                     >
-                      <FileText className="w-4 h-4 text-slate-400" />
+                      <Shield className="w-4 h-4 text-rose-400" />
                       <span>سياسة الاستخدام</span>
-                    </Link>
-
-                    <Link
-                      href="#"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2.5 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
-                    >
-                      <Download className="w-4 h-4 text-slate-400" />
-                      <span>تثبيت التطبيق</span>
                     </Link>
                   </div>
                 </div>
               ) : (
                 /* ------------------------------------------- */
-                /* STATE B: User is LOGGED IN (Screenshot 4)   */
+                /* STATE B: User is LOGGED IN */
                 /* ------------------------------------------- */
-                <div className="space-y-4 pt-2">
+                <div className="space-y-4 pt-1">
                   
-                  {/* Profile Header */}
-                  <div className="flex flex-col items-center text-center">
+                  {/* User Profile Card */}
+                  <div className="flex flex-col items-center text-center space-y-2 pt-2 pb-3 border-b border-white/5">
                     {/* Avatar */}
-                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/10 shadow-lg mb-2">
-                      <div className="w-full h-full bg-[#1c2432] flex items-center justify-center text-amber-400 font-bold text-lg">
-                        {user.name.charAt(0)}
+                    <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 font-black text-xl flex items-center justify-center shadow-lg shadow-amber-500/20 border-2 border-amber-300/40">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+
+                    {/* Name & ID */}
+                    <div>
+                      <div className="font-bold text-white text-sm">
+                        {user.name} <span className="font-mono text-amber-400">#{userNumericId}</span>
+                      </div>
+                      
+                      {/* VIP Badge */}
+                      <div className="inline-flex items-center gap-1 bg-amber-500/10 border border-amber-400/30 rounded-full px-2.5 py-0.5 text-[10px] font-bold text-amber-400 mt-1">
+                        <span>★</span>
+                        <span>Shad-Vip 1</span>
                       </div>
                     </div>
 
-                    {/* Name + ID */}
-                    <div className="text-xs font-bold text-white flex items-center gap-1">
-                      <span>{user.name}</span>
-                      <span className="text-slate-400 font-mono">#{userNumericId}</span>
-                    </div>
-
-                    {/* VIP Tier Badge */}
-                    <div className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-3 py-0.5 rounded-full text-[10px] font-black mt-1 flex items-center gap-1">
-                      <span>Shad-Vip 1 ★</span>
-                    </div>
-
-                    {/* Bold Green Balance */}
-                    <div className="text-xl font-black text-emerald-400 font-mono mt-1">
+                    {/* Green Balance Display */}
+                    <div className="text-xl font-black font-mono text-[#00e676] pt-1">
                       {displayBalance}
                     </div>
 
-                    {/* Action Icon Buttons */}
-                    <div className="flex items-center gap-5 mt-2 text-slate-400">
+                    {/* Quick Profile Actions: Heart, User, Logout */}
+                    <div className="flex items-center gap-3 pt-1 text-slate-400">
                       <Link
                         href="/favorites"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="hover:text-rose-400 transition-colors"
+                        className="p-1.5 rounded-lg bg-white/5 hover:text-rose-400 hover:bg-white/10 transition-colors"
                         title="المفضلة"
                       >
                         <Heart className="w-4 h-4" />
                       </Link>
                       <Link
-                        href="/settings"
+                        href="/wallet"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="hover:text-white transition-colors"
-                        title="الملف الشخصي"
+                        className="p-1.5 rounded-lg bg-white/5 hover:text-white hover:bg-white/10 transition-colors"
+                        title="حسابي"
                       >
                         <UserIcon className="w-4 h-4" />
                       </Link>
                       <button
                         onClick={handleLogout}
-                        className="hover:text-rose-400 transition-colors"
+                        className="p-1.5 rounded-lg bg-white/5 hover:text-rose-400 hover:bg-white/10 transition-colors"
                         title="تسجيل الخروج"
                       >
                         <LogOut className="w-4 h-4" />
@@ -345,43 +332,36 @@ export default function Header({
 
                     {/* Secondary Currency Toggle */}
                     <button
-                      onClick={() => setSecondaryCurrencyActive(!secondaryCurrencyActive)}
-                      className="mt-3 flex items-center gap-1.5 bg-yellow-400/10 border border-yellow-400/30 text-yellow-300 px-3 py-1 rounded-full text-[11px] font-bold hover:bg-yellow-400/20 transition-all"
+                      onClick={() => setSecondaryCurrencyActive((prev) => !prev)}
+                      className="w-full bg-[#18202d] hover:bg-[#202b3d] border border-amber-400/30 text-amber-400 py-1.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all mt-2"
                     >
-                      <RefreshCw className="w-3 h-3" />
-                      <span>العملة الثانوية</span>
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>{secondaryCurrencyActive ? "العملة الأساسية ($)" : "العملة الثانوية (ل.س)"}</span>
                     </button>
                   </div>
 
-                  {/* Nav links matching screenshot 4 */}
-                  <div className="space-y-0.5 pt-2 border-t border-white/5">
+                  {/* Navigation Links */}
+                  <div className="space-y-0.5 text-xs font-bold">
+                    
                     <Link
                       href="/"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl bg-[#1c2432] text-white font-bold text-xs"
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+                        pathname === "/"
+                          ? "bg-[#18202d] text-amber-400 border border-white/5"
+                          : "text-slate-300 hover:text-white hover:bg-white/5"
+                      }`}
                     >
-                      <Home className="w-4 h-4 text-emerald-400" />
+                      <Home className="w-4 h-4 text-amber-400" />
                       <span>الرئيسية</span>
                     </Link>
 
-                    <Link
-                      href="/"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center justify-between p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Bot className="w-4 h-4 text-purple-400" />
-                        <span>خدمات VIP</span>
-                      </div>
-                      <span className="bg-slate-700 text-slate-200 text-[10px] px-1.5 py-0.5 rounded-md">جديد</span>
-                    </Link>
-
-                    {/* Admin Dashboard */}
+                    {/* Admin Dashboard if authorized */}
                     {user.role === "ADMIN" && (
                       <Link
                         href="/admin"
                         onClick={() => setMobileMenuOpen(false)}
-                        className="flex items-center gap-2.5 p-2 rounded-xl text-amber-300 hover:text-amber-200 text-xs font-bold hover:bg-amber-500/10"
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
                       >
                         <Shield className="w-4 h-4 text-amber-400" />
                         <span>لوحة التحكم الإدارية</span>
@@ -391,25 +371,25 @@ export default function Header({
                     <Link
                       href="/deposit"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <CreditCard className="w-4 h-4 text-cyan-400" />
+                      <CreditCard className="w-4 h-4 text-emerald-400" />
                       <span>اضافة رصيد</span>
                     </Link>
 
                     <Link
                       href="/deposit/history"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <Receipt className="w-4 h-4 text-blue-400" />
+                      <Receipt className="w-4 h-4 text-cyan-400" />
                       <span>دفعاتي</span>
                     </Link>
 
                     <Link
                       href="/wallet"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       <Wallet className="w-4 h-4 text-yellow-400" />
                       <span>محفظتي</span>
@@ -418,35 +398,26 @@ export default function Header({
                     <Link
                       href="/orders"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <Receipt className="w-4 h-4 text-rose-400" />
+                      <FileText className="w-4 h-4 text-rose-400" />
                       <span>طلباتي</span>
                     </Link>
 
                     <a
-                      href="https://t.me"
+                      href="https://t.me/shad_store"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <Send className="w-4 h-4 text-cyan-400" />
+                      <Send className="w-4 h-4 text-sky-400" />
                       <span>ربط التلجرام</span>
                     </a>
 
                     <Link
-                      href="/agents"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
-                    >
-                      <Users className="w-4 h-4 text-teal-400" />
-                      <span>وكلاؤنا</span>
-                    </Link>
-
-                    <Link
                       href="/about"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
                       <Info className="w-4 h-4 text-blue-400" />
                       <span>من نحن</span>
@@ -455,46 +426,22 @@ export default function Header({
                     <Link
                       href="/policy"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <FileText className="w-4 h-4 text-slate-400" />
+                      <Shield className="w-4 h-4 text-emerald-400" />
                       <span>سياسة الاستخدام</span>
                     </Link>
 
-                    <Link
-                      href="#"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-slate-300 hover:text-white text-xs font-bold hover:bg-[#18202c]"
-                    >
-                      <Download className="w-4 h-4 text-slate-400" />
-                      <span>تثبيت التطبيق</span>
-                    </Link>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Drawer Footer: Social icons + Copyright */}
-            <div className="pt-4 border-t border-white/5 space-y-3">
-              <div className="flex items-center justify-center gap-4 text-slate-400">
-                <a href="#" className="hover:text-red-500 transition-colors" title="YouTube">
-                  <span className="text-sm">▶</span>
-                </a>
-                <a href="#" className="hover:text-pink-500 transition-colors" title="Instagram">
-                  <span className="text-sm">📸</span>
-                </a>
-                <a href="#" className="hover:text-blue-500 transition-colors" title="Facebook">
-                  <span className="text-sm">📘</span>
-                </a>
-                <a href="#" className="hover:text-emerald-500 transition-colors" title="WhatsApp">
-                  <span className="text-sm">💬</span>
-                </a>
-                <a href="#" className="hover:text-cyan-400 transition-colors" title="Telegram">
-                  <Send className="w-3.5 h-3.5" />
-                </a>
-              </div>
-              <div className="text-center text-[10px] text-slate-500 font-mono">
-                برمجة وتصميم Shad-Vip © 2026
+            {/* Bottom Drawer Footer */}
+            <div className="pt-4 border-t border-white/5 space-y-2">
+              <div className="flex items-center justify-center gap-3 text-slate-500 text-xs">
+                <span>برمجة وتصميم © 2026</span>
+                <span className="font-bold text-amber-400">Shad-Vip</span>
               </div>
             </div>
 

@@ -45,16 +45,16 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Tajawal:wght@400;500;700;800;900&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="font-tajawal min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white">
+      <body className="min-h-screen flex flex-col justify-between selection:bg-amber-500 selection:text-black">
         <Header
           user={user}
           announcement={announcement}
           currency={currency}
-          storeName={storeName}
+          storeName="Shad-Vip"
           storeLogo={storeLogo}
         />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 pb-24 sm:pb-6">
