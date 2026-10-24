@@ -12,7 +12,11 @@ import {
   Loader2,
   Check,
   AlertCircle,
-  ExternalLink,
+  ArrowUp,
+  ArrowDown,
+  MessageCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface Category {
@@ -31,26 +35,107 @@ interface Category {
 
 interface Props {
   initialCategories: Category[];
+  initialWhatsappEnabled?: boolean;
 }
 
-export default function CategoryManagementClient({ initialCategories }: Props) {
-  const [categories, setCategories] = useState<Category[]>(initialCategories);
+export default function CategoryManagementClient({
+  initialCategories,
+  initialWhatsappEnabled = true,
+}: Props) {
+  const [categories, setCategories] = useState<Category[]>(
+    [...initialCategories].sort((a, b) => a.sortOrder - b.sortOrder)
+  );
+
+  // WhatsApp Box Control
+  const [whatsappEnabled, setWhatsappEnabled] = useState(initialWhatsappEnabled);
+  const [isUpdatingWhatsapp, setIsUpdatingWhatsapp] = useState(false);
+
+  // Modal & Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  // Form State
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [image, setImage] = useState("");
-  const [sortOrder, setSortOrder] = useState(0);
+  const [sortOrder, setSortOrder] = useState(1);
   const [isActive, setIsActive] = useState(true);
 
   // Loading & Feedback
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setSuccessToast(msg);
+    setTimeout(() => setSuccessToast(null), 3000);
+  };
+
+  // Toggle WhatsApp Box
+  const handleToggleWhatsapp = async () => {
+    const nextState = !whatsappEnabled;
+    setIsUpdatingWhatsapp(true);
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          settings: {
+            whatsapp_box_enabled: String(nextState),
+          },
+        }),
+      });
+
+      if (res.ok) {
+        setWhatsappEnabled(nextState);
+        showToast(nextState ? "تم تفعيل ظهور مربع الواتساب بالرئيسية" : "تم إخفاء مربع الواتساب من الرئيسية");
+      }
+    } catch {
+      alert("تعذر حفظ إعدادات الواتساب");
+    } finally {
+      setIsUpdatingWhatsapp(false);
+    }
+  };
+
+  // Re-order Move Up / Down
+  const handleMoveOrder = async (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= categories.length) return;
+
+    const newCats = [...categories];
+    const current = newCats[index];
+    const target = newCats[targetIndex];
+
+    // Swap sortOrders
+    const tempOrder = current.sortOrder;
+    current.sortOrder = target.sortOrder;
+    target.sortOrder = tempOrder;
+
+    // Sort list
+    newCats.sort((a, b) => a.sortOrder - b.sortOrder);
+    setCategories(newCats);
+
+    // Save to server
+    try {
+      await Promise.all([
+        fetch("/api/admin/categories", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: current.id, sortOrder: current.sortOrder }),
+        }),
+        fetch("/api/admin/categories", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: target.id, sortOrder: target.sortOrder }),
+        }),
+      ]);
+      showToast("تم تحديث ترتيب الأقسام بنجاح");
+    } catch {
+      showToast("تعذر حفظ الترتيب الجديد");
+    }
+  };
 
   const openCreateModal = () => {
     setEditingCategory(null);
@@ -58,10 +143,9 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
     setSlug("");
     setDescription("");
     setImage("");
-    setSortOrder(categories.length);
+    setSortOrder(categories.length + 1);
     setIsActive(true);
     setErrorMessage(null);
-    setSuccessMessage(null);
     setIsModalOpen(true);
   };
 
@@ -74,7 +158,6 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
     setSortOrder(cat.sortOrder);
     setIsActive(cat.isActive);
     setErrorMessage(null);
-    setSuccessMessage(null);
     setIsModalOpen(true);
   };
 
@@ -99,7 +182,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
         setErrorMessage(data.error || "فشل رفع الصورة");
       } else {
         setImage(data.url);
-        setSuccessMessage("تم رفع الصورة بنجاح");
+        showToast("تم رفع الصورة بنجاح");
       }
     } catch {
       setErrorMessage("تعذر الاتصال بالخادم لرفع الصورة");
@@ -110,7 +193,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
 
   const handleRemoveImage = () => {
     setImage("");
-    setSuccessMessage("تم حذف الصورة من القسم");
+    showToast("تم حذف صورة القسم");
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -141,9 +224,12 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
           setErrorMessage(data.error || "فشل تحديث بيانات القسم");
         } else {
           setCategories((prev) =>
-            prev.map((c) => (c.id === editingCategory.id ? { ...c, ...data.category } : c))
+            [...prev.map((c) => (c.id === editingCategory.id ? { ...c, ...data.category } : c))].sort(
+              (a, b) => a.sortOrder - b.sortOrder
+            )
           );
           setIsModalOpen(false);
+          showToast("تم حفظ التعديلات بنجاح");
         }
       } else {
         // Create
@@ -157,8 +243,11 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
         if (!res.ok || data.error) {
           setErrorMessage(data.error || "فشل إنشاء القسم");
         } else {
-          setCategories((prev) => [...prev, { ...data.category, _count: { products: 0 } }]);
+          setCategories((prev) =>
+            [...prev, { ...data.category, _count: { products: 0 } }].sort((a, b) => a.sortOrder - b.sortOrder)
+          );
           setIsModalOpen(false);
+          showToast("تمت إضافة القسم الجديد بنجاح");
         }
       }
     } catch (err: any) {
@@ -183,6 +272,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
         alert(data.error || "تعذر حذف القسم");
       } else {
         setCategories((prev) => prev.filter((c) => c.id !== cat.id));
+        showToast("تم حذف القسم");
       }
     } catch {
       alert("تعذر الاتصال بالخادم لحذف القسم");
@@ -192,48 +282,109 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
   return (
     <div className="space-y-6 text-right">
       
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* Toast Feedback */}
+      {successToast && (
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-emerald-600 text-white px-5 py-2.5 rounded-2xl shadow-2xl font-bold text-xs flex items-center gap-2 animate-in fade-in">
+          <Check className="w-4 h-4 stroke-[3]" />
+          <span>{successToast}</span>
+        </div>
+      )}
+
+      {/* Top Header & WhatsApp Toggle Control */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#121824] p-5 rounded-3xl border border-white/10 shadow-xl">
         <div>
-          <h1 className="text-2xl font-black text-white flex items-center gap-2">
-            <Layers className="w-6 h-6 text-amber-400" />
-            <span>إدارة التصنيفات والأقسام (التحكم الكامل)</span>
+          <h1 className="text-xl font-black text-white flex items-center gap-2">
+            <Layers className="w-5 h-5 text-amber-400" />
+            <span>إدارة الأقسام والتحكم بالصور والترتيب</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            إضافة وتعديل الأقسام، رفع وحذف الصور، وضبط الترتيب والظهور في واجهة المتجر
+            ترتيب الأقسام جنباً إلى جنب (1 ← 2 ← 3)، إضافة وتغيير وحذف الصور بدقة 1:1، والتحكم بمربع الواتساب
           </p>
         </div>
 
-        <button
-          onClick={openCreateModal}
-          className="btn-vip-gold px-4 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>إضافة قسم جديد</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          
+          {/* WhatsApp Card Toggle (Point 4) */}
+          <button
+            onClick={handleToggleWhatsapp}
+            disabled={isUpdatingWhatsapp}
+            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 border transition-all ${
+              whatsappEnabled
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+            }`}
+            title="التحكم بظهور كارت الواتساب في الصفحة الرئيسية"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>مربع الواتساب:</span>
+            <span className="font-mono font-black">{whatsappEnabled ? "معروض (نشط)" : "مخفي"}</span>
+            {whatsappEnabled ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+          </button>
+
+          {/* Add Category Button */}
+          <button
+            onClick={openCreateModal}
+            className="btn-vip-gold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>إضافة قسم جديد</span>
+          </button>
+        </div>
       </div>
 
-      {/* Categories Visual Cards / Table */}
+      {/* Categories Visual List & Re-ordering Grid */}
       <div className="glass-panel rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+        <div className="p-4 bg-slate-950/50 border-b border-white/5 flex items-center justify-between text-xs text-slate-400">
+          <span>الترتيب الحالي للأقسام في واجهة المتجر (كل صف يحتوي 3 أقسام مرتبة أفقياً):</span>
+          <span className="font-mono font-bold text-amber-400">إجمالي الأقسام: {categories.length}</span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-right text-xs">
             <thead>
               <tr className="border-b border-white/10 bg-slate-950/70 text-slate-400">
-                <th className="py-3.5 px-4 font-bold">صورة القسم</th>
-                <th className="py-3.5 px-4 font-bold">اسم القسم</th>
-                <th className="py-3.5 px-4 font-bold">الرابط المباشر (Slug)</th>
-                <th className="py-3.5 px-4 font-bold">عدد المنتجات</th>
-                <th className="py-3.5 px-4 font-bold">الترتيب</th>
-                <th className="py-3.5 px-4 font-bold">الحالة</th>
-                <th className="py-3.5 px-4 font-bold text-center">الإجراءات والتحكم</th>
+                <th className="py-3 px-3 text-center font-bold">الترتيب</th>
+                <th className="py-3 px-3 font-bold">صورة القسم (1:1)</th>
+                <th className="py-3 px-4 font-bold">اسم القسم</th>
+                <th className="py-3 px-4 font-bold">الرابط المباشر (Slug)</th>
+                <th className="py-3 px-4 font-bold">عدد المنتجات</th>
+                <th className="py-3 px-4 font-bold">الحالة</th>
+                <th className="py-3 px-4 font-bold text-center">التحكم والعمليات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-slate-300">
-              {categories.map((c) => (
+              {categories.map((c, index) => (
                 <tr key={c.id} className="hover:bg-white/5 transition-colors">
                   
-                  {/* Category Thumbnail */}
-                  <td className="py-3 px-4">
+                  {/* Order Controls (Move Up / Down & Number) */}
+                  <td className="py-3 px-3 text-center">
+                    <div className="inline-flex items-center gap-1.5 bg-[#141b26] border border-white/10 rounded-xl p-1">
+                      <span className="w-6 h-6 rounded-lg bg-amber-400/20 text-amber-400 font-mono font-black text-xs flex items-center justify-center">
+                        {c.sortOrder}
+                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => handleMoveOrder(index, "up")}
+                          disabled={index === 0}
+                          className="p-1 rounded hover:bg-white/10 disabled:opacity-30 text-slate-300"
+                          title="تقديم الترتيب للأمام"
+                        >
+                          <ArrowUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => handleMoveOrder(index, "down")}
+                          disabled={index === categories.length - 1}
+                          className="p-1 rounded hover:bg-white/10 disabled:opacity-30 text-slate-300"
+                          title="تأخير الترتيب للخلف"
+                        >
+                          <ArrowDown className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Category Thumbnail (1:1 Square) */}
+                  <td className="py-3 px-3">
                     <div className="w-12 h-12 rounded-xl bg-slate-900 border border-white/10 overflow-hidden flex items-center justify-center relative shadow-md">
                       {c.image ? (
                         <img
@@ -248,27 +399,22 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                   </td>
 
                   {/* Name */}
-                  <td className="py-3.5 px-4 font-bold text-white whitespace-nowrap">
+                  <td className="py-3 px-4 font-bold text-white whitespace-nowrap">
                     {c.name}
                   </td>
 
                   {/* Slug */}
-                  <td className="py-3.5 px-4 font-mono text-cyan-400">
+                  <td className="py-3 px-4 font-mono text-cyan-400">
                     /category/{c.slug}
                   </td>
 
-                  {/* Products count */}
-                  <td className="py-3.5 px-4 font-mono font-bold text-white">
+                  {/* Products Count */}
+                  <td className="py-3 px-4 font-mono font-bold text-white">
                     {c._count.products}
                   </td>
 
-                  {/* Sort order */}
-                  <td className="py-3.5 px-4 font-mono font-bold text-slate-400">
-                    {c.sortOrder}
-                  </td>
-
-                  {/* Active status */}
-                  <td className="py-3.5 px-4 whitespace-nowrap">
+                  {/* Status */}
+                  <td className="py-3 px-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         c.isActive
@@ -281,7 +427,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                   </td>
 
                   {/* Actions */}
-                  <td className="py-3.5 px-4">
+                  <td className="py-3 px-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => openEditModal(c)}
@@ -318,7 +464,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
             <div className="flex items-center justify-between pb-3 border-b border-white/10">
               <h3 className="text-base font-black text-white flex items-center gap-2">
                 <Layers className="w-5 h-5 text-amber-400" />
-                <span>{editingCategory ? "تعديل بيانات وصور القسم" : "إضافة تصنيف / قسم جديد"}</span>
+                <span>{editingCategory ? "تعديل بيانات وصورة القسم" : "إضافة قسم جديد"}</span>
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -328,7 +474,7 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
               </button>
             </div>
 
-            {/* Error & Success Alerts */}
+            {/* Error Alert */}
             {errorMessage && (
               <div className="p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -369,11 +515,11 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                 />
               </div>
 
-              {/* Image Control (Add / Upload / Delete image) */}
+              {/* Image Control (1:1 Ratio - Add / Upload / Delete image) */}
               <div className="space-y-2 p-3 bg-white/5 rounded-2xl border border-white/5">
                 <label className="font-bold text-amber-400 flex items-center gap-1.5">
                   <ImageIcon className="w-4 h-4" />
-                  <span>صورة القسم (إضافة، تغيير، أو حذف)</span>
+                  <span>صورة القسم بدقة 1:1 مربعة (إضافة، تغيير، أو حذف)</span>
                 </label>
 
                 {/* Current Image Preview */}
@@ -427,28 +573,16 @@ export default function CategoryManagementClient({ initialCategories }: Props) {
                     type="text"
                     value={image}
                     onChange={(e) => setImage(e.target.value)}
-                    placeholder="أو ضع رابط صورة مباشر..."
+                    placeholder="أو ضع رابط صورة مباشر (1:1)..."
                     className="bg-[#18202d] border border-white/10 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 text-xs"
                   />
                 </div>
               </div>
 
-              {/* Description */}
-              <div className="space-y-1">
-                <label className="font-bold text-slate-300">وصف القسم (اختياري)</label>
-                <textarea
-                  rows={2}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="وصف مختصر للخدمات التابعة لهذا القسم..."
-                  className="w-full bg-[#18202d] border border-white/10 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 resize-none"
-                />
-              </div>
-
               {/* Order & Status */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-300">ترتيب الظهور</label>
+                  <label className="font-bold text-slate-300">رقم الترتيب (1, 2, 3...)</label>
                   <input
                     type="number"
                     value={sortOrder}

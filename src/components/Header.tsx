@@ -72,7 +72,7 @@ export default function Header({
     <>
       {/* Main Top Header matching reference image */}
       <header className="sticky top-0 z-40 bg-[#0c1017]/95 backdrop-blur-md border-b border-white/5 px-4 py-2.5 transition-all">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between" dir="ltr">
           
           {/* Left: Gold Emblem Logo + Shad-Vip Name */}
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -84,21 +84,38 @@ export default function Header({
             </span>
           </Link>
 
-          {/* Right: User action icons & Hamburger menu */}
-          <div className="flex items-center gap-2">
+          {/* Right: Hamburger menu & User action icons */}
+          <div className="flex items-center gap-2" dir="rtl">
             
-            {/* Back button (shown on subpages) */}
-            {!isHomePage && (
-              <button
-                onClick={() => router.back()}
-                className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-                title="رجوع"
-              >
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
+            {/* 1. Hamburger Menu Button (at the former logo position on the right) */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label="القائمة"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
 
-            {/* Wallet Balance Badge */}
+            {/* 2. User Profile Icon */}
+            <Link
+              href={user ? "/wallet" : "/login"}
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+              title="حسابي"
+            >
+              <UserIcon className="w-4 h-4" />
+            </Link>
+
+            {/* 3. Notification Bell */}
+            <Link
+              href="/notification"
+              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative"
+              title="الإشعارات"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
+            </Link>
+
+            {/* 4. Wallet Balance Badge */}
             {user ? (
               <Link
                 href="/deposit"
@@ -121,33 +138,16 @@ export default function Header({
               </Link>
             )}
 
-            {/* Notification Bell */}
-            <Link
-              href="/notification"
-              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors relative"
-              title="الإشعارات"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-amber-400" />
-            </Link>
-
-            {/* User Profile Icon */}
-            <Link
-              href={user ? "/wallet" : "/login"}
-              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              title="حسابي"
-            >
-              <UserIcon className="w-4 h-4" />
-            </Link>
-
-            {/* Hamburger Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
-              aria-label="القائمة"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
+            {/* 5. Back button (shown on subpages) */}
+            {!isHomePage && (
+              <button
+                onClick={() => router.back()}
+                className="p-1.5 rounded-xl bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                title="رجوع"
+              >
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
         </div>
